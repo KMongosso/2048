@@ -30,14 +30,19 @@ Game::Game(const char* title, int x, int y, int width, int height){
 	}
 
 
-	screen = new int*[4];
+	screen = new nombres_t*[4];
 	for(int i=0;i<4;i++){
-		screen[i] = new int[4];
+		screen[i] = new nombres_t[4];
 	}
 		
 	for(int i=0;i<4;i++){
 		for(int j=0;j<4;j++){
-			screen[j][i] = 0;
+			screen[j][i].val = 0;
+			screen[j][i].dest.w = screen[j][i].dest.h = 160;
+			screen[j][i].dest.x = 20+j*screen[j][i].dest.w +j*20;
+			screen[j][i].dest.y = 20+i*screen[j][i].dest.h +i*20;
+			screen[j][i].nb = TextureManager::LoadTexture("Images/transp.png");
+
 		}
 	}
 
@@ -89,14 +94,18 @@ void Game::initGrid(){
 		nb=rand()%2;
 
 		if(nb==0)
-			screen[y][x]=2;
+			screen[y][x].val=2;
 		else
-			screen[y][x]=4;
+			screen[y][x].val=4;
+
+		fichier = "Images/" + to_string(screen[y][x].val) + ".png"; 
+		fichierc = fichier.c_str();
+		screen[y][x].nb = TextureManager::LoadTexture(fichierc);
 	}
 }
 
 bool Game::occupated(int x, int y){
-	if(screen[y][x]!=0)
+	if(screen[y][x].val!=0)
 		return 1;
 	
 	else
@@ -115,11 +124,14 @@ void Game::add(){
 	
 	
 	if(nb==0)
-		screen[y][x]=2;
+		screen[y][x].val=2;
 	else
-		screen[y][x]=4;
+		screen[y][x].val=4;
 
-	cout << endl;
+	fichier = "Images/" + to_string(screen[y][x].val) + ".png"; 
+	fichierc = fichier.c_str();
+	screen[y][x].nb = TextureManager::LoadTexture(fichierc);
+
 }
 
 bool Game::full(){
@@ -127,7 +139,7 @@ bool Game::full(){
 
 	for(int i=0;i<4;i++){
 		for(int j=0;j<4;j++){
-			if(screen[j][i]==0)
+			if(screen[j][i].val==0)
 				full=0;
 		}
 	}
@@ -148,61 +160,86 @@ void Game::handleEvent(){
 	}
 }
 
+bool Game::w(){
+	bool w=0;
 
+	for(int i=0;i<4;i++){
+		for(int j=0;j<4;j++){
+			if(screen[j][i].val==2048)
+				w=1;
+		}
+	}
+
+	return w;
+}
 
 /*Met à jour le jeu*/
 void Game::update(){
 	bool same=0;
-	for(int i=0;i<4;i++){
-		for(int j=0;j<4;j++){
-			screen_bis[j][i]=screen[j][i];
-		}
-	}
+	if(!lose && !win){
+		if(iter>5){
+			if(Game::event.type == SDL_KEYDOWN){
+				switch(Game::event.key.keysym.sym){
+					case SDLK_LEFT:		//Flèche Gauche
+						left(screen);
+						iter=0;
+						break;
 
-	if(iter>5){
-		if(Game::event.type == SDL_KEYDOWN){
-			switch(Game::event.key.keysym.sym){
-				case SDLK_LEFT:		//Flèche Gauche
-					left(screen);
-					iter=0;
-					break;
+					case SDLK_DOWN:		//Flèche Bas
+						down(screen);
+						iter=0;
+						break;
 
-				case SDLK_DOWN:		//Flèche Bas
-					down(screen);
-					iter=0;
-					break;
+					case SDLK_RIGHT:	//Flèche Droite
+						right(screen);
+						iter=0;
+						break;
 
-				case SDLK_RIGHT:	//Flèche Droite
-					right(screen);
-					iter=0;
-					break;
+					case SDLK_UP:		//Flèche Haute
+						up(screen);
+						iter=0;
+						break;
 
-				case SDLK_UP:		//Flèche Haute
-					up(screen);
-					iter=0;
-					break;
-
-				default:
-					break;
-			}
-
-			same=1;
-
-			for(int i=0;i<4;i++){
-				for(int j=0;j<4;j++){
-					if(screen[j][i]!=screen_bis[j][i])
-						same=0;
+					default:
+						break;
 				}
+
+				same=1;
+
+				for(int i=0;i<4;i++){
+					for(int j=0;j<4;j++){
+						if(screen[j][i].val!=screen_bis[j][i]){
+							same=0;
+							if(screen[j][i].val==0)
+								screen[j][i].nb = TextureManager::LoadTexture("Images/transp.png");
+							else{
+								fichier = "Images/" + to_string(screen[j][i].val) + ".png"; 
+								fichierc = fichier.c_str();
+								screen[j][i].nb = TextureManager::LoadTexture(fichierc);
+							}
+							
+						}
+							
+					}
+				}
+
+				if(!same)
+					add();
 			}
-
-			if(!same)
-				add();
 		}
-	}
-	iter++;
+		iter++;
 
-	if(full() && same)
-		lose=1;
+		if(full() && same)
+			lose=1;
+
+		if(w())
+			win=1;
+	}
+	else{
+		if(iter==50)
+			isRunning=0;
+	}
+	
 }
 
 /*Ajoute toutes les textures sur le render*/
@@ -232,14 +269,7 @@ void Game::render(){
 void Game::draw(){
 		for(int j=0;j<4;j++){
 			for(int i=0;i<4;i++){
-				if(screen[i][j]!=0){
-					dest.x = 20+i*dest.w +i*20;
-					dest.y = 20+j*dest.h +j*20;
-					fichier = "Images/" + to_string(screen[i][j]) + ".png"; 
-					fichierc = fichier.c_str();
-					nb = TextureManager::LoadTexture(fichierc);
-					TextureManager::Draw(nb,src,dest);
-				}
+				TextureManager::Draw(screen[i][j].nb,src,screen[i][j].dest);
 			}
 		}
 

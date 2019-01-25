@@ -8,7 +8,6 @@
 #include <list>
 #include <stdlib.h>
 #include <time.h>
-#include <SDL2_Mixer/SDL_Mixer.h>
 #include <map>
 #include <string>
 #include <SDL2/SDL_ttf.h>
@@ -35,6 +34,7 @@ class Game{
 		void draw();
 		bool full();
 		void add();
+		bool w();
 		bool occupated(int x, int y);
 		bool getRunning(){return isRunning;}
 
@@ -45,7 +45,6 @@ class Game{
 	private:
 		int _width,_height;		//Dimensions de l'écran
 		SDL_Rect src, dest;
-		SDL_Texture* nb;
 		SDL_Texture* L;
 		SDL_Texture* W;
 
@@ -54,7 +53,7 @@ class Game{
 		int iter;
 
 		SDL_Window *window;
-		int **screen;		//Informations relatives à l'écran
+		nombres_t **screen;		//Informations relatives à l'écran
 		int **screen_bis;	
 
 		bool isRunning, win, lose;		//Indique si le jeu est toujours en cours	  
