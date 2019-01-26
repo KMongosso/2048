@@ -176,8 +176,13 @@ bool Game::w(){
 /*Met à jour le jeu*/
 void Game::update(){
 	bool same=0;
+	for(int i=0;i<4;i++){
+		for(int j=0;j<4;j++){
+			screen_bis[j][i]=screen[j][i].val;				
+		}
+	}
 	if(!lose && !win){
-		if(iter>5){
+		if(iter>2){
 			if(Game::event.type == SDL_KEYDOWN){
 				switch(Game::event.key.keysym.sym){
 					case SDLK_LEFT:		//Flèche Gauche
@@ -210,14 +215,13 @@ void Game::update(){
 					for(int j=0;j<4;j++){
 						if(screen[j][i].val!=screen_bis[j][i]){
 							same=0;
-							if(screen[j][i].val==0)
+						}
+						if(screen[j][i].val==0)
 								screen[j][i].nb = TextureManager::LoadTexture("Images/transp.png");
-							else{
-								fichier = "Images/" + to_string(screen[j][i].val) + ".png"; 
-								fichierc = fichier.c_str();
-								screen[j][i].nb = TextureManager::LoadTexture(fichierc);
-							}
-							
+						else{
+							fichier = "Images/" + to_string(screen[j][i].val) + ".png"; 
+							fichierc = fichier.c_str();
+							screen[j][i].nb = TextureManager::LoadTexture(fichierc);
 						}
 							
 					}
@@ -228,6 +232,7 @@ void Game::update(){
 			}
 		}
 		iter++;
+
 
 		if(full() && same)
 			lose=1;
